@@ -34,9 +34,46 @@ def signup():
 
     #save the data
     connection.commit()
-    #return response
+    #return response         
     return jsonify({"message": "signup successful"})
 
+
+    #login route
+@app.route("/api/login", methods=["POST"])
+def login():
+
+    email = request.form['email']
+    password = request.form['password']
+       
+    print(password,email)
+
+     #connnect to db
+    connection = pymysql.connect(host="localhost", user="root", password="",database="owen_sokogarden")
+
+    #cursor 
+    # cursor=connection.cursor()
+    #key value pair
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+
+    #create the sql query to execute
+    sql= "select user_id, username, email, phone from users where email = %s and password = %s"
+
+    #data to execute the query
+    data = (email,password)
+
+    #execute the query
+    cursor.execute(sql,data)
+
+    #check the rresulting rows
+    if cursor.rowcount==0:
+        return jsonify({"message": "inavalid credentials"})
+    else:
+        #get the user data
+        user = cursor.fetchone()
+        return jsonify({"message": "login successful", "user": user})
+
+   
+   
 
 
 
