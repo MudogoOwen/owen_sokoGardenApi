@@ -1,8 +1,10 @@
 from flask import*
 
 import pymysql
+import os 
 
 app=Flask(__name__)
+app.config["UPLOAD_FOLDER"] = "static/images"
 
 @app.route("/api/signup", methods=["POST"])
 def signup():
@@ -71,9 +73,64 @@ def login():
         #get the user data
         user = cursor.fetchone()
         return jsonify({"message": "login successful", "user": user})
+@app.route("/api/add_products",methods=["POST"])
+def addproducts():
+
+    product_name = request.form['product_name']
+    product_description = request.form['product_description']
+    product_category = request.form['product_category']
+    product_cost  = request.form['product_cost']
+    product_image = request.files['product_image']
 
    
-   
+    print(product_name,product_category,product_cost,product_image,product_cost)
+
+     #get image name
+    image_name = product_image.filename
+    print(image_name)
+
+    #save the image to folder
+    file_path = os.path.join(app.config["UPLOAD_FOLDER"], image_name)
+    print(file_path)
+    product_image.save(file_path)
+
+
+    
+
+    connection = pymysql.connect(host="localhost", user="root", password="", database="owen_sokogarden")
+    cursor = connection.cursor()
+
+    sql= "insert into product_details (product_name,product_description,product_category,product_cost,product_image) values (%s,%s,%s,%s,%s)"
+
+    data = (product_name,product_description,product_category,product_cost,product_image)
+    cursor.execute(sql,data)
+
+    connection.commit()
+
+    return jsonify({"message": "product added"})
+
+
+@app.route("/api/get_products")
+def getproducts():
+    connection = pymysql.connect(host="localhost",user="root",password="",database="owen_sokogarden")
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+
+    #select query
+    sql = "select * from product_details"
+    cursor.execute(sql)
+
+
+
+
+    if cursor.rowcount == 0:
+        return jsonify({"message": "no products found"})
+    else:
+        #fetch products
+
+        products = cursor.fetchall()
+        return jsonify(products)
+
+
 
 
 
